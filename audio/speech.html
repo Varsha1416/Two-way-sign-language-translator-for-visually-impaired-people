@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speech to Text</title>
+    <style>
+        #output {
+            font-size: 24px;
+        }
+        #image-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .char-image {
+            width: 100px;
+            height: 100px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Speech to Text Converter</h1>
+    <div>
+        <div id="image-container"></div>
+    </div>
+    <div>
+        <button onclick="startListening()">Start Listening</button>
+        <button onclick="stopListening()">Stop Listening</button>
+    </div>
+    <div>
+        <p id="output">Recognized Text: </p>
+    </div>
+
+    <script>
+        const imageContainer = document.getElementById("image-container");
+        const outputElement = document.getElementById("output");
+        let recognizing = false;
+        let recognition = new webkitSpeechRecognition();
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        recognition.onstart = function() {
+            recognizing = true;
+        };
+
+        recognition.onerror = function(event) {
+            console.error("Speech recognition error:", event.error);
+        };
+
+        recognition.onresult = function(event) {
+            let interimTranscript = "";
+            let finalTranscript = "";
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            outputElement.textContent = "Recognized Text: " + finalTranscript;
+
+            // Clear previous images
+            imageContainer.innerHTML = "";
+
+            // Change the images based on the recognized characters in the word
+            const recognizedWord = finalTranscript.trim().toLowerCase();
+            for (const char of recognizedWord) {
+                // Check if the recognized character is a letter from 'a' to 'z'
+                if (/^[a-z]$/.test(char)) {
+                    // Display the corresponding image
+                    const charIndex = char.charCodeAt(0) - 'a'.charCodeAt(0);
+                    const charImages = document.createElement("img");
+                    charImages.classList.add("char-image");
+                    charImages.src = charIndex + ".jpg";
+                    imageContainer.appendChild(charImages);
+                }
+            }
+        };
+
+        function startListening() {
+            if (!recognizing) {
+                recognition.start();
+            }
+        }
+
+        function stopListening() {
+            if (recognizing) {
+                recognition.stop();
+            }
+        }
+    </script>
+</body>
+</html>
